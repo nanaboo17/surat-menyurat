@@ -1,113 +1,236 @@
 "use client";
 
-import { Search, Eye, Power, Trash } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
+import { Search, Eye, Power, Trash, User, LogOut } from "lucide-react";
 
 export default function AcceptanceLetterPage() {
+  const [appliedLetters, setAppliedLetters] = useState<
+    { date: string; number: string; nim: string }[]
+  >([]);
+  const { username } = useAuth();
+  const [showProfile, setShowProfile] = useState(false);
+  const [entriesToShow, setEntriesToShow] = useState(5);
+  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const [showLetterDropdown, setShowLetterDropdown] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = () => {
+    setShowLogoutPopup(false);
+    router.push("/login");
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (
+        !target.closest("#letter-dropdown") &&
+        !target.closest("#letter-button")
+      ) {
+        setShowLetterDropdown(false);
+      }
+      if (
+        !target.closest("#profile-dropdown") &&
+        !target.closest("#profile-button")
+      ) {
+        setShowProfile(false);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  // Fetch applied letters from API or local storage
+  useEffect(() => {
+    const fetchAppliedLetters = async () => {
+      const response = await fetch("/api/appliedLetters"); // Replace with actual API
+      const data = await response.json();
+      setAppliedLetters(data);
+    };
+
+    fetchAppliedLetters();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navbar */}
-      <nav className="bg-white shadow-md p-4 flex justify-between items-center">
+      <nav className="bg-white shadow-md p-4 flex items-center">
         <div className="flex items-center">
-          <img src="/logo.png" alt="HUMIC Engineering" className="h-8 mr-2" />
-          <span className="font-bold text-lg">HUMIC Engineering</span>
+          <img
+            src="/logo-humic-text.png"
+            alt="HUMIC Engineering"
+            className="h-17 mr-3"
+          />
         </div>
-        <div className="flex space-x-6">
-          <a href="#" className="text-gray-700 hover:text-red-500">
+
+        {/* Navigation Links */}
+        <div className="flex space-x-[47px] ml-[47px] ">
+          <a
+            href="#"
+            className="text-gray-700 hover:bg-red-200 px-3 py-2 rounded-md"
+          >
             Home
           </a>
-          <a href="#" className="text-red-500 border-b-2 border-red-500 pb-1">
-            Letter
-          </a>
+
+          {/* Letter Button with Dropdown */}
+          <div className="relative">
+            <button
+              id="letter-button"
+              onClick={() => setShowLetterDropdown(!showLetterDropdown)}
+              className="text-[#B4262A] border-b-2 border-[#B4262A] pb-1 px-4 py-2 
+             hover:bg-gray-200 hover:rounded-lg hover:rounded-b-none 
+             transition-all duration-200 cursor-pointer"
+            >
+              Letter
+            </button>
+
+            {showLetterDropdown && (
+              <div
+                id="letter-dropdown"
+                className="absolute mt-1 bg-white shadow-md rounded-md w-48 z-50 transition-all duration-200"
+              >
+                <button
+                  onClick={() => router.push("/letter/acceptanceletter")}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  Acceptance Letter
+                </button>
+                <button
+                  onClick={() => router.push("/letter/completionletter")}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                >
+                  Completion Letter
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        <img
-          src="/profile.jpg"
-          alt="Profile"
-          className="h-10 w-10 rounded-full object-cover"
-        />
+
+        {/* Profile Button */}
+        <div className="ml-auto relative">
+          <button
+            id="profile-button"
+            onClick={() => setShowProfile(!showProfile)}
+            className="text-gray-500 text-2xl cursor-pointer p-2 hover:bg-gray-200 rounded-full"
+          >
+            <User />
+          </button>
+
+          {showProfile && (
+            <div
+              id="profile-dropdown"
+              className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-lg overflow-hidden z-50"
+            >
+              <div className="p-4 bg-gray-200 text-black text-center">
+                <p className="font-semibold">{username || "Guest"}</p>
+                <p className="text-sm text-gray-600">1234567899</p>
+              </div>
+              <button
+                onClick={() => setShowLogoutPopup(true)}
+                className="flex items-center w-full px-4 py-2 text-black hover:bg-gray-100"
+              >
+                <LogOut className="mr-2" size={18} />
+                Log Out
+              </button>
+            </div>
+          )}
+        </div>
       </nav>
 
-      {/* Page Header */}
+      {/* Page Content */}
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-black">
+        <h1 className="text-3xl text-black">
           Practical Work Acceptance Letter
         </h1>
 
-        {/* Buttons */}
-        <div className="mt-4 flex space-x-4">
-          <button className="bg-black text-white px-4 py-2 rounded-md cursor-not-allowed opacity-70">
-            Apply letter
-          </button>
-          <button className="bg-black text-white px-4 py-2 rounded-md cursor-not-allowed opacity-70">
-            View template
-          </button>
-        </div>
-
-        {/* Table */}
+        {/* Content Box (Buttons + Table) */}
         <div className="bg-white p-6 rounded-lg shadow-md mt-6">
-          {/* Entries & Search */}
-          <div className="flex justify-between items-center mb-4">
-            <div className="flex items-center space-x-2">
-              <span>Show</span>
-              <select className="border rounded px-2 py-1">
-                <option>3</option>
-              </select>
-              <span>entries</span>
+          {/* Buttons & Search */}
+          <div className="flex justify-between items-start mb-4">
+            {/* Left - Buttons + Entries */}
+            <div className="flex flex-col space-y-3">
+              {/* Buttons Side by Side */}
+              <div className="flex space-x-2">
+                <button className="bg-[#2c2c2c] text-white px-4 py-2 rounded-md">
+                  Apply letter
+                </button>
+                <button className="bg-[#2c2c2c] text-white px-4 py-2 rounded-md ">
+                  View template
+                </button>
+              </div>
+
+              {/* Show Entries Dropdown Below Buttons */}
+              <div className="flex items-center space-x-2">
+                <span className="text-black">Show</span>
+                <select
+                  className="border border-black rounded px-2 py-1 bg-white text-black"
+                  value={entriesToShow}
+                  onChange={(e) => setEntriesToShow(Number(e.target.value))}
+                >
+                  {[5, 10, 15, 20, 25, 30].map((num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-black">entries</span>
+              </div>
             </div>
+
+            {/* Right - Search */}
             <input
               type="text"
               placeholder="Search..."
-              className="border px-3 py-2 rounded-md"
+              className="border px-3 py-2 rounded-md text-black"
             />
           </div>
 
-          {/* Table Content */}
-          <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-200 text-black">
-                <th className="px-4 py-2 text-left">Submission date</th>
-                <th className="px-4 py-2 text-left">Letter number</th>
-                <th className="px-4 py-2 text-left">NIM</th>
-                <th className="px-4 py-2 text-left">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[...Array(3)].map((_, index) => (
-                <tr key={index} className="border-b">
-                  <td className="px-4 py-2">20 September 2024</td>
-                  <td className="px-4 py-2">HUMIC/INT/20.9.2024/070</td>
-                  <td className="px-4 py-2">1301213203</td>
-                  <td className="px-4 py-2 flex space-x-2">
-                    <button className="p-2 bg-gray-300 rounded-md cursor-not-allowed">
-                      <Search size={16} />
-                    </button>
-                    <button className="p-2 bg-gray-300 rounded-md cursor-not-allowed">
-                      <Power size={16} />
-                    </button>
-                    <button className="p-2 bg-gray-300 rounded-md cursor-not-allowed">
-                      <Trash size={16} />
-                    </button>
-                  </td>
+          {/* Table */}
+          {/* Table */}
+          <div className="bg-white p-6 rounded-lg shadow-md">
+            <table className="w-full border border-black border-collapse">
+              <thead>
+                <tr className="bg-gray-200 text-black font-normal">
+                  <th className="px-4 py-2 text-center border border-black w-1/3">
+                    Submission date
+                  </th>
+                  <th className="px-4 py-2 text-center border border-black w-1/3">
+                    Letter number
+                  </th>
+                  <th className="px-4 py-2 text-center border border-black w-1/3">
+                    NIM
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {/* Pagination */}
-          <div className="flex justify-between items-center mt-4">
-            <span>Showing 1 to 4 of 4 entries</span>
-            <div className="flex space-x-2">
-              <button className="px-3 py-1 bg-gray-200 rounded-md cursor-not-allowed">
-                &larr; Previous
-              </button>
-              <button className="px-3 py-1 bg-black text-white rounded-md">
-                1
-              </button>
-              <button className="px-3 py-1 bg-gray-200 rounded-md">2</button>
-              <button className="px-3 py-1 bg-gray-200 rounded-md">3</button>
-              <button className="px-3 py-1 bg-gray-200 rounded-md">
-                &rarr; Next
-              </button>
-            </div>
+              </thead>
+              <tbody>
+                {appliedLetters.length > 0 ? (
+                  appliedLetters.map((letter, index) => (
+                    <tr key={index} className="border border-black text-black">
+                      <td className="px-4 py-2 border border-black w-1/3">
+                        {letter.date}
+                      </td>
+                      <td className="px-4 py-2 border border-black w-1/3">
+                        {letter.number}
+                      </td>
+                      <td className="px-4 py-2 border border-black w-1/3">
+                        {letter.nim}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      className="px-4 py-2 text-center border border-black text-black"
+                    >
+                      No applied letters yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
