@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import { Search, Eye, Power, Trash, User, LogOut } from "lucide-react";
+import { Search, Eye, Download, Trash, User, LogOut } from "lucide-react";
 
 export default function AcceptanceLetterPage() {
   const [appliedLetters, setAppliedLetters] = useState<
@@ -68,7 +68,7 @@ export default function AcceptanceLetterPage() {
         {/* Navigation Links */}
         <div className="flex space-x-[47px] ml-[47px] ">
           <a
-            href="#"
+            href="/homepage"
             className="text-gray-700 hover:bg-red-200 px-3 py-2 rounded-md"
           >
             Home
@@ -93,13 +93,13 @@ export default function AcceptanceLetterPage() {
               >
                 <button
                   onClick={() => router.push("/letter/acceptanceletter")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer text-black"
                 >
                   Acceptance Letter
                 </button>
                 <button
                   onClick={() => router.push("/letter/completionletter")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer text-black"
                 >
                   Completion Letter
                 </button>
@@ -140,7 +140,7 @@ export default function AcceptanceLetterPage() {
       </nav>
 
       {/* Page Content */}
-      <div className="p-6">
+      <div className="pl-20 pr-20 pt-10">
         <h1 className="text-3xl text-black">
           Practical Work Acceptance Letter
         </h1>
@@ -153,7 +153,12 @@ export default function AcceptanceLetterPage() {
             <div className="flex flex-col space-y-3">
               {/* Buttons Side by Side */}
               <div className="flex space-x-2">
-                <button className="bg-[#2c2c2c] text-white px-4 py-2 rounded-md">
+                <button
+                  onClick={() =>
+                    router.push("/letter/acceptanceletter/applyLetter")
+                  }
+                  className="bg-[#2c2c2c] text-white px-4 py-2 rounded-md cursor-pointer"
+                >
                   Apply letter
                 </button>
                 <button className="bg-[#2c2c2c] text-white px-4 py-2 rounded-md ">
@@ -188,19 +193,21 @@ export default function AcceptanceLetterPage() {
           </div>
 
           {/* Table */}
-          {/* Table */}
           <div className="bg-white p-6 rounded-lg shadow-md">
             <table className="w-full border border-black border-collapse">
               <thead>
                 <tr className="bg-gray-200 text-black font-normal">
-                  <th className="px-4 py-2 text-center border border-black w-1/3">
+                  <th className="px-4 py-2 text-center border border-black w-1/4">
                     Submission date
                   </th>
-                  <th className="px-4 py-2 text-center border border-black w-1/3">
+                  <th className="px-4 py-2 text-center border border-black w-1/4">
                     Letter number
                   </th>
-                  <th className="px-4 py-2 text-center border border-black w-1/3">
+                  <th className="px-4 py-2 text-center border border-black w-1/4">
                     NIM
+                  </th>
+                  <th className="px-4 py-2 text-center border border-black w-1/4">
+                    Action
                   </th>
                 </tr>
               </thead>
@@ -208,21 +215,43 @@ export default function AcceptanceLetterPage() {
                 {appliedLetters.length > 0 ? (
                   appliedLetters.map((letter, index) => (
                     <tr key={index} className="border border-black text-black">
-                      <td className="px-4 py-2 border border-black w-1/3">
+                      <td className="px-4 py-2 border border-black w-1/4">
                         {letter.date}
                       </td>
-                      <td className="px-4 py-2 border border-black w-1/3">
+                      <td className="px-4 py-2 border border-black w-1/4">
                         {letter.number}
                       </td>
-                      <td className="px-4 py-2 border border-black w-1/3">
+                      <td className="px-4 py-2 border border-black w-1/4">
                         {letter.nim}
+                      </td>
+                      <td className="px-4 py-2 border border-black w-1/4">
+                        <div className="flex justify-center space-x-2">
+                          <button
+                            className="p-2 text-blue-500 hover:bg-blue-100 rounded-md"
+                            disabled
+                          >
+                            <Eye className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="p-2 text-green-500 hover:bg-green-100 rounded-md"
+                            disabled
+                          >
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button
+                            className="p-2 text-red-500 hover:bg-red-100 rounded-md"
+                            disabled
+                          >
+                            <Trash className="h-4 w-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
                 ) : (
                   <tr>
                     <td
-                      colSpan={3}
+                      colSpan={4}
                       className="px-4 py-2 text-center border border-black text-black"
                     >
                       No applied letters yet.

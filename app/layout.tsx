@@ -3,7 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "./context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "My App",
+  title: "Website Surat Menyurat",
   description: "A Next.js application",
 };
 

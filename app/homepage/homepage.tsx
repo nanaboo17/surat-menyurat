@@ -4,15 +4,31 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useRouter } from "next/navigation";
 import { HeartPulse, CheckCircle, LogOut, User } from "lucide-react";
+import axios from "axios";
 
 export default function HomePage() {
-  const [acceptanceLetters, setAcceptanceLetters] = useState(12);
-  const [completionLetters, setCompletionLetters] = useState(9);
+  const [acceptanceLetters, setAcceptanceLetters] = useState(0);
+  const [completionLetters, setCompletionLetters] = useState(0);
   const { username } = useAuth();
   const [showProfile, setShowProfile] = useState(false);
   const [showLogoutPopup, setShowLogoutPopup] = useState(false);
   const [showLetterDropdown, setShowLetterDropdown] = useState(false);
   const router = useRouter();
+
+  // Fetch the latest counts from the backend
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const response = await axios.get("/api/get-letter-counts");
+        setAcceptanceLetters(response.data.acceptanceLetters);
+        setCompletionLetters(response.data.completionLetters);
+      } catch (error) {
+        console.error("Failed to fetch letter counts:", error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
 
   const handleLogout = () => {
     setShowLogoutPopup(false);
@@ -44,13 +60,21 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navbar */}
-      <nav className="bg-white shadow-md p-4 flex justify-between items-center relative">
+      <nav className="bg-white shadow-md p-4 flex items-center">
         <div className="flex items-center">
-          <img src="/logo.png" alt="HUMIC Engineering" className="h-8 mr-2" />
-          <span className="font-bold text-lg">HUMIC Engineering</span>
+          <img
+            src="/logo-humic-text.png"
+            alt="HUMIC Engineering"
+            className="h-17 mr-3"
+          />
         </div>
-        <div className="flex space-x-6">
-          <a href="#" className="text-red-500 border-b-2 border-red-500 pb-1">
+        <div className="flex space-x-[47px] ml-[47px]">
+          <a
+            href="#"
+            className="text-[#B4262A] border-b-2 border-[#B4262A] pb-1 px-4 py-2 
+             hover:bg-gray-200 hover:rounded-lg hover:rounded-b-none 
+             transition-all duration-200 cursor-pointer"
+          >
             Home
           </a>
 
@@ -59,9 +83,7 @@ export default function HomePage() {
             <button
               id="letter-button"
               onClick={() => setShowLetterDropdown(!showLetterDropdown)}
-              className={`text-gray-700 hover:text-red-500 ${
-                showLetterDropdown ? "border-b-2 border-red-500" : ""
-              } pb-1`}
+              className="text-gray-700 hover:bg-red-200 px-3 py-2 rounded-md"
             >
               Letter
             </button>
@@ -69,17 +91,17 @@ export default function HomePage() {
             {showLetterDropdown && (
               <div
                 id="letter-dropdown"
-                className="absolute mt-1 bg-white shadow-md rounded-md w-48 z-50"
+                className="absolute mt-1 bg-white shadow-md rounded-md w-48 z-50 transition-all duration-200"
               >
                 <button
                   onClick={() => router.push("/letter/acceptanceletter")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer text-black"
                 >
                   Acceptance Letter
                 </button>
                 <button
-                  onClick={() => router.push("/letter/completionLetter")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  onClick={() => router.push("/letter/completionletter")}
+                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer text-black"
                 >
                   Completion Letter
                 </button>
@@ -89,7 +111,7 @@ export default function HomePage() {
         </div>
 
         {/* Profile Button */}
-        <div className="relative">
+        <div className="ml-auto relative">
           <button
             id="profile-button"
             onClick={() => setShowProfile(!showProfile)}
@@ -155,12 +177,16 @@ export default function HomePage() {
       <div className="flex justify-center space-x-8 py-10">
         <div className="bg-white p-6 rounded-lg shadow-md text-center w-48">
           <HeartPulse className="text-red-500 text-4xl mx-auto" />
-          <h2 className="text-xl font-semibold mt-2">{acceptanceLetters}</h2>
+          <h2 className="text-xl font-semibold mt-2 text-black">
+            {acceptanceLetters}
+          </h2>
           <p className="text-gray-600">Acceptance Letter</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-md text-center w-48">
           <CheckCircle className="text-red-500 text-4xl mx-auto" />
-          <h2 className="text-xl font-semibold mt-2">{completionLetters}</h2>
+          <h2 className="text-xl font-semibold mt-2 text-black">
+            {completionLetters}
+          </h2>
           <p className="text-gray-600">Completion Letter</p>
         </div>
       </div>
