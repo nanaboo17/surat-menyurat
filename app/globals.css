@@ -135,5 +135,6 @@ hr, .border {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Calibri', 'Times New Roman', serif;
   }
 }

@@ -1,41 +1,61 @@
+// Updated Homepage UI with Figma Design Style
 "use client";
 
 import { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
+import { useRef } from "react";
 import { useRouter } from "next/navigation";
 import { HeartPulse, CheckCircle, LogOut, User } from "lucide-react";
-import axios from "axios";
 
 export default function HomePage() {
   const [acceptanceLetters, setAcceptanceLetters] = useState(0);
   const [completionLetters, setCompletionLetters] = useState(0);
   const { username } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showLogoutPopup, setShowLogoutPopup] = useState(false);
+  const profileRef = useRef(null);
+
   const [showLetterDropdown, setShowLetterDropdown] = useState(false);
   const router = useRouter();
 
-  // Fetch the latest counts from the backend
   useEffect(() => {
-    const fetchCounts = async () => {
+    const fetchLetterCounts = async () => {
       try {
-        const response = await axios.get("/api/get-letter-counts");
-        setAcceptanceLetters(response.data.acceptanceLetters);
-        setCompletionLetters(response.data.completionLetters);
+        const token = localStorage.getItem("authToken");
+        const response = await fetch(
+          "https://cetaksuratkp-api.humicprototyping.com/api/letter",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+          }
+        );
+        const json = await response.json();
+        const letters = json.data;
+
+        if (Array.isArray(letters)) {
+          const acceptanceCount = letters.filter(
+            (letter) => letter.is_acceptance
+          ).length;
+          const completionCount = letters.filter(
+            (letter) => letter.is_completion
+          ).length;
+
+          setAcceptanceLetters(acceptanceCount);
+          setCompletionLetters(completionCount);
+        } else {
+          console.error("Unexpected response format", letters);
+          console.log("API Response", json);
+        }
       } catch (error) {
-        console.error("Failed to fetch letter counts:", error);
+        console.error("Failed to fetch letter data:", error);
       }
     };
 
-    fetchCounts();
+    fetchLetterCounts();
   }, []);
 
-  const handleLogout = () => {
-    setShowLogoutPopup(false);
-    router.push("/login");
-  };
-
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
@@ -52,7 +72,6 @@ export default function HomePage() {
         setShowProfile(false);
       }
     };
-
     document.addEventListener("click", handleClickOutside);
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
@@ -60,134 +79,146 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Navbar */}
-      <nav className="bg-white shadow-md p-4 flex items-center">
-        <div className="flex items-center">
+      <nav className="bg-white shadow-md px-10 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-8">
           <img
             src="/logo-humic-text.png"
             alt="HUMIC Engineering"
-            className="h-17 mr-3"
+            className="h-12 mr-3"
           />
-        </div>
-        <div className="flex space-x-[47px] ml-[47px]">
-          <a
-            href="#"
-            className="text-[#B4262A] border-b-2 border-[#B4262A] pb-1 px-4 py-2 
-             hover:bg-gray-200 hover:rounded-lg hover:rounded-b-none 
-             transition-all duration-200 cursor-pointer"
-          >
-            Home
-          </a>
-
-          {/* Letter Button with Dropdown */}
-          <div className="relative">
-            <button
-              id="letter-button"
-              onClick={() => setShowLetterDropdown(!showLetterDropdown)}
-              className="text-gray-700 hover:bg-red-200 px-3 py-2 rounded-md"
+          <div className="flex space-x-8">
+            <a
+              href="#"
+              className="text-[#B4262A] font-semibold border-b-2 border-[#B4262A]"
             >
-              Letter
-            </button>
-
-            {showLetterDropdown && (
-              <div
-                id="letter-dropdown"
-                className="absolute mt-1 bg-white shadow-md rounded-md w-48 z-50 transition-all duration-200"
+              Home
+            </a>
+            <div className="relative">
+              <button
+                id="letter-button"
+                onClick={() => setShowLetterDropdown(!showLetterDropdown)}
+                className="text-gray-700 hover:text-[#B4262A] font-medium cursor-pointer transition duration-300"
               >
-                <button
-                  onClick={() => router.push("/letter/acceptanceletter")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer text-black"
+                Letter
+              </button>
+
+              {showLetterDropdown && (
+                <div
+                  id="letter-dropdown"
+                  className="absolute mt-2 bg-white shadow-md rounded-md w-48 z-50"
                 >
-                  Acceptance Letter
-                </button>
-                <button
-                  onClick={() => router.push("/letter/completionletter")}
-                  className="block w-full text-left px-4 py-2 hover:bg-gray-100 cursor-pointer text-black"
-                >
-                  Completion Letter
-                </button>
-              </div>
-            )}
+                  <button
+                    onClick={() => router.push("/letter/acceptanceletter")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Acceptance Letter
+                  </button>
+                  <button
+                    onClick={() => router.push("/letter/completionletter")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100"
+                  >
+                    Completion Letter
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Profile Button */}
-        <div className="ml-auto relative">
+        <div className="relative z-50">
           <button
             id="profile-button"
             onClick={() => setShowProfile(!showProfile)}
-            className="text-gray-500 text-2xl cursor-pointer p-2 hover:bg-gray-200 rounded-full"
+            className="text-gray-700 hover:text-black cursor-pointer"
           >
             <User />
           </button>
-
-          {/* Profile Dropdown */}
           {showProfile && (
             <div
               id="profile-dropdown"
-              className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-lg overflow-hidden z-50"
+              className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-lg"
             >
-              <div className="p-4 bg-gray-200 text-black text-center">
+              <div className="p-4 bg-gray-100 text-black text-center">
                 <p className="font-semibold">{username || "Guest"}</p>
-                <p className="text-sm text-gray-600">1234567899</p>
               </div>
               <button
-                onClick={() => setShowLogoutPopup(true)}
-                className="flex items-center w-full px-4 py-2 text-black hover:bg-gray-100"
+                onClick={async () => {
+                  setIsLoggingOut(true);
+                  await new Promise((resolve) => setTimeout(resolve, 1000)); // simulasi delay
+                  setIsLoggingOut(false);
+                  router.push("/login");
+                }}
+                disabled={isLoggingOut}
+                className="w-full flex items-center justify-center px-4 py-2 text-sm text-black hover:bg-gray-200"
               >
-                <LogOut className="mr-2" size={18} />
-                Log Out
+                {isLoggingOut ? (
+                  <svg
+                    className="animate-spin h-4 w-4 mr-2 text-black"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <LogOut className="mr-2" size={18} />
+                )}
+                {isLoggingOut ? "Logging out..." : "Log Out"}
               </button>
             </div>
           )}
         </div>
       </nav>
 
-      {/* Logout Confirmation Popup */}
-      {showLogoutPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-10 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-80 text-center">
-            <h2 className="text-lg font-semibold text-black">
-              Are you sure you want to log out?
-            </h2>
-            <div className="flex justify-center mt-4 space-x-4">
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => setShowLogoutPopup(false)}
-                className="px-4 py-2 bg-gray-300 text-black rounded-md hover:bg-gray-400"
-              >
-                No
-              </button>
-            </div>
-          </div>
+      {/* Hero Section */}
+      <div className="relative">
+        <img
+          src="assets/background.jpg"
+          className="w-full h-[320px] object-cover z-0"
+          alt="Background"
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white text-center">
+          <h1 className="text-5xl font-bold drop-shadow-lg">
+            Welcome{username ? `, ${username}` : ""}!
+          </h1>
         </div>
-      )}
-
-      {/* Welcome Section */}
-      <div className="text-center py-16 bg-white shadow-md">
-        <h1 className="text-4xl font-bold text-black">Welcome,</h1>
-        <p className="text-black text-lg">{username ? username : "Guest"}!</p>
       </div>
 
-      {/* Statistics Section */}
-      <div className="flex justify-center space-x-8 py-10">
-        <div className="bg-white p-6 rounded-lg shadow-md text-center w-48">
-          <HeartPulse className="text-red-500 text-4xl mx-auto" />
-          <h2 className="text-xl font-semibold mt-2 text-black">
-            {acceptanceLetters}
-          </h2>
-          <p className="text-gray-600">Acceptance Letter</p>
+      <div className="grid grid-cols-3 gap-6 p-10">
+        {/* Letter Maker Box */}
+        <div className="bg-white shadow-md rounded-lg p-6 col-span-2">
+          <h2 className="text-xl font-bold text-black mb-3">Letter Maker</h2>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            This platform allows interns at HUMIC Engineering to easily create
+            and manage their internship documents, including acceptance and
+            completion letters, in a fast, accurate, and secure way.
+          </p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow-md text-center w-48">
-          <CheckCircle className="text-red-500 text-4xl mx-auto" />
-          <h2 className="text-xl font-semibold mt-2 text-black">
-            {completionLetters}
-          </h2>
-          <p className="text-gray-600">Completion Letter</p>
+
+        {/* Stats Cards */}
+        <div className="flex flex-col space-y-4">
+          <div className="bg-white p-4 rounded-lg shadow-md text-center">
+            <HeartPulse className="text-yellow-500 text-4xl mx-auto mb-2" />
+            <p className="text-lg font-bold text-black">{acceptanceLetters}</p>
+            <p className="text-gray-600 text-sm">Acceptance letter</p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow-md text-center">
+            <CheckCircle className="text-green-500 text-4xl mx-auto mb-2" />
+            <p className="text-lg font-bold text-black">{completionLetters}</p>
+            <p className="text-gray-600 text-sm">Completion letter</p>
+          </div>
         </div>
       </div>
     </div>
